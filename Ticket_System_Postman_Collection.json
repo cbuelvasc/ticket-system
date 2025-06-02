@@ -1,0 +1,1089 @@
+{
+  "info": {
+    "name": "Xeppelin Ticket System API",
+    "description": "Comprehensive API collection for the Xeppelin Ticket System\n\nThis collection includes:\n- Event Management (Organizer & Public endpoints)\n- Ticket Type Management (when controller is implemented)\n- Future: Ticket Reservations (when controller is implemented)\n- Health & Monitoring endpoints\n- OpenAPI Documentation endpoints\n\n**Base URL:** {{baseUrl}}/api/ticket-system\n**Environment Variables:**\n- baseUrl: http://localhost:9001\n- organizerId: Sample organizer UUID\n- eventId: Sample event UUID\n- ticketTypeId: Sample ticket type UUID\n- sessionId: Session identifier for reservations",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:9001",
+      "type": "string"
+    },
+    {
+      "key": "organizerId",
+      "value": "123e4567-e89b-12d3-a456-426614174000",
+      "type": "string"
+    },
+    {
+      "key": "eventId",
+      "value": "123e4567-e89b-12d3-a456-426614174001",
+      "type": "string"
+    },
+    {
+      "key": "sessionId",
+      "value": "session_{{$randomUUID}}",
+      "type": "string"
+    },
+    {
+      "key": "ticketTypeId",
+      "value": "123e4567-e89b-12d3-a456-426614174002",
+      "type": "string"
+    },
+    {
+      "key": "reservationId",
+      "value": "123e4567-e89b-12d3-a456-426614174003",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{authToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Set session ID with timestamp for uniqueness",
+          "if (!pm.collectionVariables.get('sessionId') || pm.collectionVariables.get('sessionId') === '') {",
+          "    pm.collectionVariables.set('sessionId', 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9));",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Common test to check response time",
+          "pm.test('Response time is less than 2000ms', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+          "});",
+          "",
+          "// Auto-extract common IDs from responses",
+          "if (pm.response.code === 201 || pm.response.code === 200) {",
+          "    try {",
+          "        const jsonData = pm.response.json();",
+          "        if (jsonData.id) {",
+          "            pm.collectionVariables.set('lastCreatedId', jsonData.id);",
+          "        }",
+          "        if (jsonData.eventId) {",
+          "            pm.collectionVariables.set('eventId', jsonData.eventId);",
+          "        }",
+          "        if (jsonData.reservationId) {",
+          "            pm.collectionVariables.set('reservationId', jsonData.reservationId);",
+          "        }",
+          "        if (jsonData.ticketTypeId) {",
+          "            pm.collectionVariables.set('ticketTypeId', jsonData.ticketTypeId);",
+          "        }",
+          "    } catch (e) {",
+          "        // Ignore JSON parsing errors",
+          "    }",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Event Management",
+      "description": "APIs for managing events - both organizer operations and public access",
+      "item": [
+        {
+          "name": "Organizer Operations",
+          "description": "Event management operations for organizers",
+          "item": [
+            {
+              "name": "Create Event",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 201', function () {",
+                      "    pm.response.to.have.status(201);",
+                      "});",
+                      "",
+                      "pm.test('Response has event ID', function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.property('id');",
+                      "    pm.collectionVariables.set('eventId', jsonData.id);",
+                      "});",
+                      "",
+                      "pm.test('Event has correct status', function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.status).to.be.oneOf(['DRAFT', 'PUBLISHED']);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Spring Boot Conference 2024\",\n  \"start\": \"2024-12-15T20:00:00+01:00[Europe/Madrid]\",\n  \"end\": \"2024-12-15T23:00:00+01:00[Europe/Madrid]\",\n  \"venue\": \"Madrid Convention Center\",\n  \"salesStart\": \"2024-11-01T10:00:00+01:00[Europe/Madrid]\",\n  \"salesEnd\": \"2024-12-15T19:00:00+01:00[Europe/Madrid]\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/ticket-system/events/organizers/{{organizerId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "ticket-system", "events", "organizers", "{{organizerId}}"]
+                },
+                "description": "Creates a new event for the specified organizer. The event will be created in DRAFT status by default."
+              },
+              "response": []
+            },
+            {
+              "name": "List Events for Organizer",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('Response has pagination info', function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.property('content');",
+                      "    pm.expect(jsonData).to.have.property('totalElements');",
+                      "    pm.expect(jsonData).to.have.property('totalPages');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/ticket-system/events/organizers/{{organizerId}}?page=0&size=10&sort=start,desc",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "ticket-system", "events", "organizers", "{{organizerId}}"],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    },
+                    {
+                      "key": "size",
+                      "value": "10"
+                    },
+                    {
+                      "key": "sort",
+                      "value": "start,desc"
+                    }
+                  ]
+                },
+                "description": "Retrieves a paginated list of events for the specified organizer"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Event for Organizer",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('Response has event details', function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.property('id');",
+                      "    pm.expect(jsonData).to.have.property('name');",
+                      "    pm.expect(jsonData).to.have.property('venue');",
+                      "    pm.expect(jsonData).to.have.property('start');",
+                      "    pm.expect(jsonData).to.have.property('end');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/ticket-system/events/{{eventId}}/organizers/{{organizerId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "ticket-system", "events", "{{eventId}}", "organizers", "{{organizerId}}"]
+                },
+                "description": "Retrieves detailed information about a specific event owned by the organizer"
+              },
+              "response": []
+            },
+            {
+              "name": "Update Event",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('Event was updated', function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.property('id');",
+                      "    pm.expect(jsonData.name).to.include('Updated');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Updated Spring Boot Conference 2024\",\n  \"venue\": \"Updated Madrid Convention Center - Hall A\",\n  \"status\": \"PUBLISHED\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/ticket-system/events/{{eventId}}/organizers/{{organizerId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "ticket-system", "events", "{{eventId}}", "organizers", "{{organizerId}}"]
+                },
+                "description": "Updates an existing event owned by the organizer. Only provided fields will be updated."
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Event",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 204', function () {",
+                      "    pm.response.to.have.status(204);",
+                      "});",
+                      "",
+                      "pm.test('Response body is empty', function () {",
+                      "    pm.expect(pm.response.text()).to.be.empty;",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/ticket-system/events/{{eventId}}/organizers/{{organizerId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "ticket-system", "events", "{{eventId}}", "organizers", "{{organizerId}}"]
+                },
+                "description": "Deletes an event owned by the organizer. This operation is irreversible."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Public Operations",
+          "description": "Public event access operations",
+          "item": [
+            {
+              "name": "List Published Events",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('Response has pagination info', function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.property('content');",
+                      "    pm.expect(jsonData).to.have.property('totalElements');",
+                      "});",
+                      "",
+                      "pm.test('All events are published', function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    if (jsonData.content && jsonData.content.length > 0) {",
+                      "        jsonData.content.forEach(event => {",
+                      "            pm.expect(event.status).to.equal('PUBLISHED');",
+                      "        });",
+                      "    }",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/ticket-system/events?page=0&size=10&sort=start,asc",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "ticket-system", "events"],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    },
+                    {
+                      "key": "size",
+                      "value": "10"
+                    },
+                    {
+                      "key": "sort",
+                      "value": "start,asc"
+                    }
+                  ]
+                },
+                "description": "Retrieves a paginated list of all published events available to the public"
+              },
+              "response": []
+            },
+            {
+              "name": "Search Published Events",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('Search results are relevant', function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    if (jsonData.content && jsonData.content.length > 0) {",
+                      "        const searchQuery = 'spring conference';",
+                      "        jsonData.content.forEach(event => {",
+                      "            const searchFields = (event.name + ' ' + event.venue).toLowerCase();",
+                      "            const queryWords = searchQuery.toLowerCase().split(' ');",
+                      "            const hasRelevantContent = queryWords.some(word => searchFields.includes(word));",
+                      "            pm.expect(hasRelevantContent).to.be.true;",
+                      "        });",
+                      "    }",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/ticket-system/events/search?query=spring conference&page=0&size=10&sort=start,asc",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "ticket-system", "events", "search"],
+                  "query": [
+                    {
+                      "key": "query",
+                      "value": "spring conference"
+                    },
+                    {
+                      "key": "page",
+                      "value": "0"
+                    },
+                    {
+                      "key": "size",
+                      "value": "10"
+                    },
+                    {
+                      "key": "sort",
+                      "value": "start,asc"
+                    }
+                  ]
+                },
+                "description": "Searches published events by name and venue using full-text search"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Published Event Details",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('Event is published', function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.status).to.equal('PUBLISHED');",
+                      "});",
+                      "",
+                      "pm.test('Event has complete information', function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.property('id');",
+                      "    pm.expect(jsonData).to.have.property('name');",
+                      "    pm.expect(jsonData).to.have.property('venue');",
+                      "    pm.expect(jsonData).to.have.property('start');",
+                      "    pm.expect(jsonData).to.have.property('end');",
+                      "    pm.expect(jsonData).to.have.property('organizer');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/ticket-system/events/{{eventId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "ticket-system", "events", "{{eventId}}"]
+                },
+                "description": "Retrieves detailed information about a specific published event"
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Ticket Type Management",
+      "description": "APIs for managing ticket types for events",
+      "item": [
+        {
+          "name": "Organizer Operations",
+          "description": "Ticket type management operations for organizers",
+          "item": [
+            {
+              "name": "Create Ticket Type",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 201', function () {",
+                      "    pm.response.to.have.status(201);",
+                      "});",
+                      "",
+                      "pm.test('Response has ticket type ID', function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.property('id');",
+                      "    pm.collectionVariables.set('ticketTypeId', jsonData.id);",
+                      "});",
+                      "",
+                      "pm.test('Ticket type has correct event ID', function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    const expectedEventId = pm.collectionVariables.get('eventId');",
+                      "    pm.expect(jsonData.eventId).to.equal(expectedEventId);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"General Admission\",\n  \"description\": \"Standard access to the conference\",\n  \"price\": 150.00,\n  \"totalAvailable\": 500\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/ticket-system/ticket-types/events/{{eventId}}/organizers/{{organizerId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "ticket-system", "ticket-types", "events", "{{eventId}}", "organizers", "{{organizerId}}"]
+                },
+                "description": "Creates a new ticket type for the specified event owned by the organizer"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Ticket Types for Event",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('Response is an array', function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.be.an('array');",
+                      "});",
+                      "",
+                      "pm.test('All ticket types belong to event', function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    const expectedEventId = pm.collectionVariables.get('eventId');",
+                      "    jsonData.forEach(ticketType => {",
+                      "        pm.expect(ticketType.eventId).to.equal(expectedEventId);",
+                      "    });",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/ticket-system/ticket-types/events/{{eventId}}/organizers/{{organizerId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "ticket-system", "ticket-types", "events", "{{eventId}}", "organizers", "{{organizerId}}"]
+                },
+                "description": "Retrieves all ticket types for the specified event owned by the organizer"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Ticket Type Details",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('Ticket type has correct ID', function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    const expectedId = pm.collectionVariables.get('ticketTypeId');",
+                      "    pm.expect(jsonData.id).to.equal(expectedId);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/ticket-system/ticket-types/{{ticketTypeId}}/events/{{eventId}}/organizers/{{organizerId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "ticket-system", "ticket-types", "{{ticketTypeId}}", "events", "{{eventId}}", "organizers", "{{organizerId}}"]
+                },
+                "description": "Retrieves detailed information about a specific ticket type"
+              },
+              "response": []
+            },
+            {
+              "name": "Update Ticket Type",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('Ticket type was updated', function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.property('id');",
+                      "    pm.expect(jsonData.price).to.equal(175.00);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"price\": 175.00,\n  \"description\": \"Updated: Standard access to the conference with networking session\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/ticket-system/ticket-types/{{ticketTypeId}}/events/{{eventId}}/organizers/{{organizerId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "ticket-system", "ticket-types", "{{ticketTypeId}}", "events", "{{eventId}}", "organizers", "{{organizerId}}"]
+                },
+                "description": "Updates an existing ticket type. Only provided fields will be updated."
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Ticket Type",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 204', function () {",
+                      "    pm.response.to.have.status(204);",
+                      "});",
+                      "",
+                      "pm.test('Response body is empty', function () {",
+                      "    pm.expect(pm.response.text()).to.be.empty;",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/ticket-system/ticket-types/{{ticketTypeId}}/events/{{eventId}}/organizers/{{organizerId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "ticket-system", "ticket-types", "{{ticketTypeId}}", "events", "{{eventId}}", "organizers", "{{organizerId}}"]
+                },
+                "description": "Deletes a ticket type. This operation is only allowed if no tickets have been sold."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Public Operations",
+          "description": "Public ticket type access operations",
+          "item": [
+            {
+              "name": "Get Public Ticket Types for Event",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('Response is an array', function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.be.an('array');",
+                      "});",
+                      "",
+                      "pm.test('All ticket types belong to event', function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    const expectedEventId = pm.collectionVariables.get('eventId');",
+                      "    jsonData.forEach(ticketType => {",
+                      "        pm.expect(ticketType.eventId).to.equal(expectedEventId);",
+                      "        pm.expect(ticketType).to.have.property('availableQuantity');",
+                      "    });",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/ticket-system/ticket-types/events/{{eventId}}/public",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "ticket-system", "ticket-types", "events", "{{eventId}}", "public"]
+                },
+                "description": "Retrieves all available ticket types for a published event with availability information"
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Ticket Reservations (Future Implementation)",
+      "description": "APIs for managing ticket reservations - These endpoints will be available when the reservation controller is implemented",
+      "item": [
+        {
+          "name": "Create Reservation (Not Implemented)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Implementation Note', function () {",
+                  "    console.log('This endpoint will be available when TicketReservationController is implemented');",
+                  "    console.log('Expected endpoint: POST /api/ticket-system/reservations');",
+                  "    console.log('The domain logic and data models already exist in the codebase');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Session-ID",
+                "value": "{{sessionId}}",
+                "description": "Session identifier for reservation management"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{eventId}}\",\n  \"ticketTypeId\": \"{{ticketTypeId}}\",\n  \"quantity\": 2,\n  \"durationMinutes\": 15\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/ticket-system/reservations",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ticket-system", "reservations"]
+            },
+            "description": "Creates a temporary reservation for tickets. Note: This endpoint will be available when the reservation controller is implemented. The domain logic and persistence layer already exist."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Health & Monitoring",
+      "description": "Application health and monitoring endpoints",
+      "item": [
+        {
+          "name": "Health Check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Application is UP', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.equal('UP');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/ticket-system/admin/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ticket-system", "admin", "health"]
+            },
+            "description": "Checks the health status of the application"
+          },
+          "response": []
+        },
+        {
+          "name": "Application Info",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has application info', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('object');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/ticket-system/admin/info",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ticket-system", "admin", "info"]
+            },
+            "description": "Gets application information and build details"
+          },
+          "response": []
+        },
+        {
+          "name": "Metrics",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has metrics data', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('object');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/ticket-system/admin/metrics",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ticket-system", "admin", "metrics"]
+            },
+            "description": "Gets application metrics and performance data"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "OpenAPI Documentation",
+      "description": "API documentation endpoints",
+      "item": [
+        {
+          "name": "Swagger UI",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is HTML', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('text/html');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "text/html"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/ticket-system/swagger-ui.html",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ticket-system", "swagger-ui.html"]
+            },
+            "description": "Opens the Swagger UI for interactive API documentation"
+          },
+          "response": []
+        },
+        {
+          "name": "OpenAPI Specification",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is valid OpenAPI spec', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('openapi');",
+                  "    pm.expect(jsonData).to.have.property('info');",
+                  "    pm.expect(jsonData).to.have.property('paths');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/ticket-system/v3/api-docs",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ticket-system", "v3", "api-docs"]
+            },
+            "description": "Gets the OpenAPI 3.0 specification in JSON format"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global pre-request script",
+          "console.log('Making request to: ' + pm.request.url);",
+          "",
+          "// Ensure session ID is set for reservation operations",
+          "if (pm.request.url.toString().includes('/reservations') && !pm.collectionVariables.get('sessionId')) {",
+          "    pm.collectionVariables.set('sessionId', 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9));",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test script",
+          "pm.test('Response has valid JSON when Content-Type is application/json', function () {",
+          "    const contentType = pm.response.headers.get('Content-Type');",
+          "    if (contentType && contentType.includes('application/json')) {",
+          "        pm.expect(pm.response.json).to.not.throw();",
+          "    }",
+          "});",
+          "",
+          "// Extract common error information",
+          "if (pm.response.code >= 400) {",
+          "    try {",
+          "        const errorData = pm.response.json();",
+          "        console.log('Error Response:', JSON.stringify(errorData, null, 2));",
+          "    } catch (e) {",
+          "        console.log('Error Response Body:', pm.response.text());",
+          "    }",
+          "}"
+        ]
+      }
+    }
+  ]
+} 

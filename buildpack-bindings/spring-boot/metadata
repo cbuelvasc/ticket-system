@@ -1,0 +1,3 @@
+optimization.enabled=true
+jvm.memory.optimization=true
+spring.profiles.active=docker 

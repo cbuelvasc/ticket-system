@@ -1,0 +1,130 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.4.6'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.xeppelin'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+ext {
+	set('springCloudVersion', "2024.0.1")
+	set('springdocOpenapiVersion', "2.8.8")
+	set('mapstructVersion', "1.6.3")
+	set('micrometerTracingVersion', "1.4.3")
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.flywaydb:flyway-core'
+	implementation 'org.flywaydb:flyway-database-postgresql'
+	implementation 'org.springframework.cloud:spring-cloud-starter'
+	implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocOpenapiVersion}"
+	implementation "org.mapstruct:mapstruct:${mapstructVersion}"
+
+	implementation 'io.micrometer:micrometer-tracing-bridge-otel'
+	implementation 'io.opentelemetry:opentelemetry-exporter-otlp'
+	implementation 'io.micrometer:micrometer-tracing'
+	implementation 'io.micrometer:micrometer-registry-otlp'
+
+	compileOnly 'org.projectlombok:lombok'
+
+	runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+	runtimeOnly 'org.postgresql:postgresql'
+
+	annotationProcessor 'org.projectlombok:lombok'
+	annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
+
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+	testImplementation 'org.testcontainers:junit-jupiter'
+	testImplementation 'org.testcontainers:postgresql'
+
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+dependencyManagement {
+  imports {
+    mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    mavenBom "io.micrometer:micrometer-tracing-bom:${micrometerTracingVersion}"
+  }
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+// Optimizaciones para el build
+tasks.withType(JavaCompile) {
+	options.incremental = true
+	options.fork = true
+	options.forkOptions.memoryMaximumSize = "1g"
+}
+
+// Configuración de Buildpacks (reemplaza Dockerfile)
+tasks.named('bootBuildImage') {
+	builder = 'paketobuildpacks/builder-jammy-base:latest'
+	imageName = "${project.name}:${project.version}"
+	
+	environment = [
+		'BP_JVM_VERSION': '21',
+		'BP_JVM_JLINK_ENABLED': 'true'
+	]
+	
+	// Cache entre builds para mayor velocidad
+	publish = false
+	pullPolicy = 'IF_NOT_PRESENT'
+}
+
+// Optimizar el bootJar task
+bootJar {
+	enabled = true
+	archiveClassifier = ''
+	layered {
+		enabled = true
+	}
+}
+
+// Configuración para builds paralelos
+if (project.hasProperty('parallel')) {
+	gradle.startParameter.parallelProjectExecutionEnabled = true
+}
+
+// Task personalizada para dependency resolution cache
+tasks.register('downloadDependencies') {
+	description "Downloads all dependencies to the Gradle cache"
+	doLast {
+		configurations.each { config ->
+			if (config.canBeResolved) {
+				config.files
+			}
+		}
+	}
+}
+
+// Task personalizada para build con buildpacks
+tasks.register('buildImage') {
+	dependsOn 'bootBuildImage'
+	description "Builds optimized container image using buildpacks"
+	group "build"
+}

@@ -1,0 +1,44 @@
+# Git
+.git
+.gitignore
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Build outputs
+build/
+target/
+out/
+.gradle/
+
+# Logs
+*.log
+logs/
+
+# Test outputs
+.gradletasknamecache
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation
+*.md
+docs/
+
+# CI/CD
+.github/
+
+# Cache
+.cache/
+
+# Node modules (if any frontend)
+node_modules/
+
+# Temporary files
+*.tmp
+*.temp

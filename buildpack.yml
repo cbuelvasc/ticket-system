@@ -1,0 +1,35 @@
+# Configuración optimizada para buildpacks
+builder: paketobuildpacks/builder-jammy-base:latest
+
+env:
+  # JVM optimizations
+  - BP_JVM_VERSION=21
+  - BP_JVM_JLINK_ENABLED=true
+  - BP_MAVEN_BUILT_ARTIFACT=build/libs/*.jar
+  - BP_GRADLE_BUILT_ARTIFACT=build/libs/*.jar
+  
+  # Memory optimizations
+  - BPL_JVM_HEAD_ROOM=5
+  - BPL_JVM_LOADED_CLASS_COUNT=35
+  - BPL_JVM_THREAD_COUNT=250
+  - BPL_SPRING_CLOUD_BINDINGS_DISABLED=false
+  
+  # Build optimizations
+  - BP_GRADLE_BUILD_ARGUMENTS=--no-daemon --parallel
+  - BP_GRADLE_ADDITIONAL_BUILD_ARGUMENTS=-x test
+
+include-files:
+  - gradle/
+  - src/
+  - build.gradle
+  - settings.gradle
+  - gradle.properties
+  - buildpack-bindings/
+
+exclude-files:
+  - .git/
+  - .gradle/
+  - build/
+  - .idea/
+  - "*.log"
+  - "*.tmp" 

@@ -1,0 +1,34 @@
+# Local development configuration
+# Override Docker-specific settings for local development
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ticket_db
+    username: user
+    password: password
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+management:
+  metrics:
+    export:
+      otlp:
+        enabled: true
+        url: http://localhost:4318/v1/metrics
+  tracing:
+    export:
+      otlp:
+        endpoint: http://localhost:4318
+  otlp:
+    tracing:
+      endpoint: http://localhost:4318/v1/traces
+    metrics:
+      endpoint: http://localhost:4318/v1/metrics
+
+logging:
+  level:
+    com.xeppelin: DEBUG
+    io.opentelemetry: INFO
+    io.micrometer: INFO 
