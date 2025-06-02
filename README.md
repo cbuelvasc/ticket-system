@@ -140,22 +140,22 @@ For detailed ER diagram, see [ER_Diagram_TicketSystem.md](ER_Diagram_TicketSyste
 ### API Endpoints Overview
 
 #### Organizer Operations
-- `POST /api/v1/organizers/{organizerId}/events` - Create event
-- `GET /api/v1/organizers/{organizerId}/events` - List organizer events
-- `GET /api/v1/organizers/{organizerId}/events/{eventId}` - Get specific event
-- `PUT /api/v1/organizers/{organizerId}/events/{eventId}` - Update event
-- `DELETE /api/v1/organizers/{organizerId}/events/{eventId}` - Delete event
+- `POST /events/organizers/{organizerId}` - Create event
+- `GET /events/organizers/{organizerId}` - List organizer events
+- `GET /events/{eventId}/organizers/{organizerId}` - Get specific event
+- `PUT /events/{eventId}/organizers/{organizerId}` - Update event
+- `DELETE /events/{eventId}/organizers/{organizerId}` - Delete event
 
 #### Public Operations
-- `GET /api/v1/events` - List published events
-- `GET /api/v1/events/search` - Search events
-- `GET /api/v1/events/{eventId}` - Get event details
+- `GET /events` - List published events
+- `GET /events/search` - Search events
+- `GET /events/{eventId}` - Get event details
 
 ### Request/Response Examples
 
 #### Create Event
 ```bash
-curl -X POST "http://localhost:9001/api/ticket-system/api/v1/organizers/{organizerId}/events" \
+curl -X POST "http://localhost:9001/api/ticket-system/events/organizers/{organizerId}" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Spring Conference 2024",
@@ -165,6 +165,28 @@ curl -X POST "http://localhost:9001/api/ticket-system/api/v1/organizers/{organiz
     "salesStart": "2024-11-01T10:00:00+01:00[Europe/Madrid]",
     "salesEnd": "2024-12-15T19:00:00+01:00[Europe/Madrid]"
   }'
+```
+
+**Response (HTTP 201):**
+```json
+{
+  "id": "123e4567-e89b-12d3-a456-426614174001",
+  "name": "Spring Conference 2024",
+  "start": "2024-12-15T20:00:00+01:00[Europe/Madrid]",
+  "end": "2024-12-15T23:00:00+01:00[Europe/Madrid]",
+  "venue": "Madrid Convention Center",
+  "salesStart": "2024-11-01T10:00:00+01:00[Europe/Madrid]",
+  "salesEnd": "2024-12-15T19:00:00+01:00[Europe/Madrid]",
+  "status": "DRAFT",
+  "organizer": {
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "name": "John Doe",
+    "email": "john.doe@example.com"
+  },
+  "attendees": [],
+  "staff": [],
+  "ticketTypes": []
+}
 ```
 
 For complete API documentation, see [EVENT_API_DOCUMENTATION.md](EVENT_API_DOCUMENTATION.md)
@@ -320,44 +342,6 @@ Complete API testing collection available:
 - `create_structure.sh` - Generate project structure
 - `build-buildpack.sh` - Optimized container builds
 - `build-fast.sh` - Quick development builds
-
-## 🤝 Contributing
-
-### Development Workflow
-
-1. **Create feature branch**
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-
-2. **Implement changes**
-   - Follow code style guidelines
-   - Add unit tests
-   - Update documentation
-
-3. **Run tests**
-   ```bash
-   ./gradlew test integrationTest
-   ```
-
-4. **Build and test locally**
-   ```bash
-   ./build-buildpack.sh --dev
-   docker-compose up -d
-   ```
-
-5. **Create pull request**
-
-### Code Quality Standards
-
-- **Test Coverage**: Minimum 80%
-- **Code Style**: Enforced by Checkstyle
-- **Documentation**: JavaDoc for public APIs
-- **Performance**: No degradation in critical paths
-
-## 📄 License
-
-[Add your license information here]
 
 ## 👥 Team
 
