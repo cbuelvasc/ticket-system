@@ -90,7 +90,7 @@ INSERT INTO events (id, name, event_start, event_end, venue, sales_start, sales_
 ('60eebc99-9c0b-4ef8-bb6d-6bb9bd380a66', 'Dubai International Conference', '2025-11-20 08:00:00+04:00', '2025-11-22 17:00:00+04:00', 'Dubai World Trade Centre - Dubai, UAE', '2025-08-01 00:00:00+04:00', '2025-11-19 23:59:59+04:00', 'PUBLISHED', 'a6eebc99-9c0b-4ef8-bb6d-6bb9bd380a77', 'system', CURRENT_TIMESTAMP, 0),
 
 -- Events in Americas (USA - UTC-8) - ACTIVE event happening soon
-('70eebc99-9c0b-4ef8-bb6d-6bb9bd380a77', 'San Francisco Music Festival', '2025-03-15 18:00:00-08:00', '2025-03-15 23:00:00-08:00', 'Golden Gate Park - San Francisco, USA', CURRENT_TIMESTAMP, '2025-03-14 23:59:59-08:00', 'ACTIVE', 'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', 'system', CURRENT_TIMESTAMP, 0),
+('70eebc99-9c0b-4ef8-bb6d-6bb9bd380a77', 'San Francisco Music Festival', '2025-03-15 18:00:00-08:00', '2025-03-15 23:00:00-08:00', 'Golden Gate Park - San Francisco, USA', '2025-01-01 00:00:00-08:00', '2025-03-14 23:59:59-08:00', 'ACTIVE', 'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', 'system', CURRENT_TIMESTAMP, 0),
 
 -- Additional Events Around the World (30+)
 -- Europe Events
@@ -148,9 +148,9 @@ INSERT INTO events (id, name, event_start, event_end, venue, sales_start, sales_
 ('113ebc99-9c0b-4ef8-bb6d-6bb9bd380a33', 'Asian Cultural Expo 2026', '2026-03-10 10:00:00+08:00', '2026-03-14 20:00:00+08:00', 'Singapore Expo - Singapore', '2025-10-01 00:00:00+08:00', '2026-03-09 23:59:59+08:00', 'DRAFT', '13eebc99-9c0b-4ef8-bb6d-6bb9bd380a33', 'system', CURRENT_TIMESTAMP, 0),
 
 -- Near-term ACTIVE events for realistic testing
-('114ebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'New Year Concert 2025', '2025-02-15 20:00:00+01:00', '2025-02-15 22:30:00+01:00', 'Vienna State Opera - Vienna, Austria', CURRENT_TIMESTAMP - INTERVAL '7 days', '2025-02-14 23:59:59+01:00', 'ACTIVE', '36eebc99-9c0b-4ef8-bb6d-6bb9bd380a66', 'system', CURRENT_TIMESTAMP, 0),
-('115ebc99-9c0b-4ef8-bb6d-6bb9bd380a22', 'Valentine Jazz Night', '2025-02-20 19:30:00-05:00', '2025-02-20 23:00:00-05:00', 'Blue Note - New York, USA', CURRENT_TIMESTAMP - INTERVAL '3 days', '2025-02-19 23:59:59-05:00', 'ACTIVE', '50eebc99-9c0b-4ef8-bb6d-6bb9bd380aaa', 'system', CURRENT_TIMESTAMP, 0),
-('116ebc99-9c0b-4ef8-bb6d-6bb9bd380a33', 'Chinese New Year Celebration', '2025-02-25 18:00:00+08:00', '2025-02-25 22:00:00+08:00', 'Singapore Gardens by the Bay', CURRENT_TIMESTAMP, '2025-02-24 23:59:59+08:00', 'ACTIVE', '13eebc99-9c0b-4ef8-bb6d-6bb9bd380a33', 'system', CURRENT_TIMESTAMP, 0);
+('114ebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'New Year Concert 2025', '2025-02-15 20:00:00+01:00', '2025-02-15 22:30:00+01:00', 'Vienna State Opera - Vienna, Austria', '2024-11-01 00:00:00+01:00', '2025-02-14 23:59:59+01:00', 'ACTIVE', '36eebc99-9c0b-4ef8-bb6d-6bb9bd380a66', 'system', CURRENT_TIMESTAMP, 0),
+('115ebc99-9c0b-4ef8-bb6d-6bb9bd380a22', 'Valentine Jazz Night', '2025-02-20 19:30:00-05:00', '2025-02-20 23:00:00-05:00', 'Blue Note - New York, USA', '2024-12-01 00:00:00-05:00', '2025-02-19 23:59:59-05:00', 'ACTIVE', '50eebc99-9c0b-4ef8-bb6d-6bb9bd380aaa', 'system', CURRENT_TIMESTAMP, 0),
+('116ebc99-9c0b-4ef8-bb6d-6bb9bd380a33', 'Chinese New Year Celebration', '2025-02-25 18:00:00+08:00', '2025-02-25 22:00:00+08:00', 'Singapore Gardens by the Bay', '2024-12-01 00:00:00+08:00', '2025-02-24 23:59:59+08:00', 'ACTIVE', '13eebc99-9c0b-4ef8-bb6d-6bb9bd380a33', 'system', CURRENT_TIMESTAMP, 0);
 
 -- =====================================================
 -- 3. USER-EVENT RELATIONSHIPS

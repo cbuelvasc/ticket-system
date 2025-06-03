@@ -1,8 +1,8 @@
 {
   "info": {
     "name": "Xeppelin Ticket System API",
-    "description": "Comprehensive API collection for the Xeppelin Ticket System\n\nThis collection includes:\n- Event Management (Organizer & Public endpoints)\n- Ticket Type Management (when controller is implemented)\n- Future: Ticket Reservations (when controller is implemented)\n- Health & Monitoring endpoints\n- OpenAPI Documentation endpoints\n\n**Base URL:** {{baseUrl}}/api/ticket-system\n**Environment Variables:**\n- baseUrl: http://localhost:9001\n- organizerId: Sample organizer UUID\n- eventId: Sample event UUID\n- ticketTypeId: Sample ticket type UUID\n- sessionId: Session identifier for reservations",
-    "version": "1.0.0",
+    "description": "Comprehensive API collection for the Xeppelin Ticket System\n\nThis collection includes:\n- Event Management (Organizer & Public endpoints)\n- Ticket Type Management (Complete CRUD operations)\n- Health & Monitoring endpoints\n- OpenAPI Documentation endpoints\n\n**Base URL:** {{baseUrl}}/api/ticket-system\n**Environment Variables:**\n- baseUrl: http://localhost:9001\n- organizerId: Sample organizer UUID\n- eventId: Sample event UUID\n- ticketTypeId: Sample ticket type UUID\n\n**Note:** Ticket Reservation endpoints are not yet implemented - the controller interface exists but implementation is pending.",
+    "version": "2.0.0",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -19,11 +19,6 @@
     {
       "key": "eventId",
       "value": "123e4567-e89b-12d3-a456-426614174001",
-      "type": "string"
-    },
-    {
-      "key": "sessionId",
-      "value": "session_{{$randomUUID}}",
       "type": "string"
     },
     {
@@ -53,10 +48,18 @@
       "script": {
         "type": "text/javascript",
         "exec": [
-          "// Set session ID with timestamp for uniqueness",
-          "if (!pm.collectionVariables.get('sessionId') || pm.collectionVariables.get('sessionId') === '') {",
-          "    pm.collectionVariables.set('sessionId', 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9));",
-          "}"
+          "// Global pre-request script",
+          "console.log('🚀 Making request to: ' + pm.request.url);",
+          "",
+          "// Check if we're hitting an implemented endpoint",
+          "const url = pm.request.url.toString();",
+          "if (url.includes('/reservations')) {",
+          "    console.log('⚠️ WARNING: Reservation endpoints are not implemented yet');",
+          "    console.log('Expected result: 404 Not Found');",
+          "}",
+          "",
+          "// Set timestamp for tracking request timing",
+          "pm.collectionVariables.set('requestStartTime', Date.now());"
         ]
       }
     },
@@ -65,29 +68,45 @@
       "script": {
         "type": "text/javascript",
         "exec": [
-          "// Common test to check response time",
-          "pm.test('Response time is less than 2000ms', function () {",
-          "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+          "// Global test script",
+          "const responseTime = Date.now() - pm.collectionVariables.get('requestStartTime');",
+          "console.log('⏱️ Request completed in: ' + responseTime + 'ms');",
+          "",
+          "pm.test('Response has valid JSON when Content-Type is application/json', function () {",
+          "    const contentType = pm.response.headers.get('Content-Type');",
+          "    if (contentType && contentType.includes('application/json') && pm.response.text()) {",
+          "        pm.expect(pm.response.json).to.not.throw();",
+          "    }",
           "});",
           "",
-          "// Auto-extract common IDs from responses",
-          "if (pm.response.code === 201 || pm.response.code === 200) {",
+          "// Extract common IDs from successful responses",
+          "if (pm.response.code >= 200 && pm.response.code < 300) {",
           "    try {",
           "        const jsonData = pm.response.json();",
-          "        if (jsonData.id) {",
+          "        if (jsonData.id && !Array.isArray(jsonData)) {",
           "            pm.collectionVariables.set('lastCreatedId', jsonData.id);",
+          "            console.log('💾 Extracted ID: ' + jsonData.id);",
           "        }",
-          "        if (jsonData.eventId) {",
-          "            pm.collectionVariables.set('eventId', jsonData.eventId);",
-          "        }",
-          "        if (jsonData.reservationId) {",
-          "            pm.collectionVariables.set('reservationId', jsonData.reservationId);",
-          "        }",
-          "        if (jsonData.ticketTypeId) {",
-          "            pm.collectionVariables.set('ticketTypeId', jsonData.ticketTypeId);",
+          "        // Extract specific IDs for chaining requests",
+          "        if (jsonData.eventId) pm.collectionVariables.set('eventId', jsonData.eventId);",
+          "        if (jsonData.ticketTypeId) pm.collectionVariables.set('ticketTypeId', jsonData.ticketTypeId);",
+          "        if (jsonData.reservationId) pm.collectionVariables.set('reservationId', jsonData.reservationId);",
+          "    } catch (e) {",
+          "        // Ignore JSON parsing errors for non-JSON responses",
+          "    }",
+          "}",
+          "",
+          "// Enhanced error logging",
+          "if (pm.response.code >= 400) {",
+          "    console.log('❌ Error Response Code: ' + pm.response.code);",
+          "    try {",
+          "        const errorData = pm.response.json();",
+          "        console.log('Error Details:', JSON.stringify(errorData, null, 2));",
+          "        if (errorData.validationErrors) {",
+          "            console.log('Validation Errors:', errorData.validationErrors);",
           "        }",
           "    } catch (e) {",
-          "        // Ignore JSON parsing errors",
+          "        console.log('Error Response Body:', pm.response.text());",
           "    }",
           "}"
         ]
@@ -143,7 +162,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"name\": \"Spring Boot Conference 2024\",\n  \"start\": \"2024-12-15T20:00:00+01:00[Europe/Madrid]\",\n  \"end\": \"2024-12-15T23:00:00+01:00[Europe/Madrid]\",\n  \"venue\": \"Madrid Convention Center\",\n  \"salesStart\": \"2024-11-01T10:00:00+01:00[Europe/Madrid]\",\n  \"salesEnd\": \"2024-12-15T19:00:00+01:00[Europe/Madrid]\"\n}"
+                  "raw": "{\n  \"name\": \"Spring Boot Conference 2024\",\n  \"start\": \"2024-12-15T20:00:00+01:00[Europe/Madrid]\",\n  \"end\": \"2024-12-15T23:00:00+01:00[Europe/Madrid]\",\n  \"venue\": \"Madrid Convention Center\",\n  \"salesStart\": \"2024-11-01T10:00:00+01:00[Europe/Madrid]\",\n  \"salesEnd\": \"2024-12-15T19:00:00+01:00[Europe/Madrid]\",\n  \"staffIds\": [\n    \"a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11\",\n    \"b1ffcd99-9c0b-4ef8-bb6d-6bb9bd380a22\"\n  ],\n  \"ticketTypes\": [\n    {\n      \"name\": \"General Admission\",\n      \"description\": \"Standard access to the conference\",\n      \"price\": 150.00,\n      \"totalAvailable\": 500\n    },\n    {\n      \"name\": \"VIP\",\n      \"description\": \"VIP access with premium seating and catering\",\n      \"price\": 299.00,\n      \"totalAvailable\": 50\n    }\n  ]\n}"
                 },
                 "url": {
                   "raw": "{{baseUrl}}/api/ticket-system/events/organizers/{{organizerId}}",
@@ -787,61 +806,49 @@
                 "description": "Retrieves all available ticket types for a published event with availability information"
               },
               "response": []
+            },
+            {
+              "name": "Get Public Ticket Type Details",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test('Ticket type has correct structure', function () {",
+                      "    const jsonData = pm.response.json();",
+                      "    pm.expect(jsonData).to.have.property('id');",
+                      "    pm.expect(jsonData).to.have.property('name');",
+                      "    pm.expect(jsonData).to.have.property('price');",
+                      "    pm.expect(jsonData).to.have.property('availableQuantity');",
+                      "    pm.expect(jsonData).to.have.property('isAvailable');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/ticket-system/ticket-types/{{ticketTypeId}}/events/{{eventId}}/public",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "ticket-system", "ticket-types", "{{ticketTypeId}}", "events", "{{eventId}}", "public"]
+                },
+                "description": "Retrieves detailed information about a specific ticket type for a published event"
+              },
+              "response": []
             }
           ]
-        }
-      ]
-    },
-    {
-      "name": "Ticket Reservations (Future Implementation)",
-      "description": "APIs for managing ticket reservations - These endpoints will be available when the reservation controller is implemented",
-      "item": [
-        {
-          "name": "Create Reservation (Not Implemented)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Implementation Note', function () {",
-                  "    console.log('This endpoint will be available when TicketReservationController is implemented');",
-                  "    console.log('Expected endpoint: POST /api/ticket-system/reservations');",
-                  "    console.log('The domain logic and data models already exist in the codebase');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "X-Session-ID",
-                "value": "{{sessionId}}",
-                "description": "Session identifier for reservation management"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"eventId\": \"{{eventId}}\",\n  \"ticketTypeId\": \"{{ticketTypeId}}\",\n  \"quantity\": 2,\n  \"durationMinutes\": 15\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/ticket-system/reservations",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "ticket-system", "reservations"]
-            },
-            "description": "Creates a temporary reservation for tickets. Note: This endpoint will be available when the reservation controller is implemented. The domain logic and persistence layer already exist."
-          },
-          "response": []
         }
       ]
     },
@@ -1042,48 +1049,57 @@
           "response": []
         }
       ]
-    }
-  ],
-  "event": [
-    {
-      "listen": "prerequest",
-      "script": {
-        "type": "text/javascript",
-        "exec": [
-          "// Global pre-request script",
-          "console.log('Making request to: ' + pm.request.url);",
-          "",
-          "// Ensure session ID is set for reservation operations",
-          "if (pm.request.url.toString().includes('/reservations') && !pm.collectionVariables.get('sessionId')) {",
-          "    pm.collectionVariables.set('sessionId', 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9));",
-          "}"
-        ]
-      }
     },
     {
-      "listen": "test",
-      "script": {
-        "type": "text/javascript",
-        "exec": [
-          "// Global test script",
-          "pm.test('Response has valid JSON when Content-Type is application/json', function () {",
-          "    const contentType = pm.response.headers.get('Content-Type');",
-          "    if (contentType && contentType.includes('application/json')) {",
-          "        pm.expect(pm.response.json).to.not.throw();",
-          "    }",
-          "});",
-          "",
-          "// Extract common error information",
-          "if (pm.response.code >= 400) {",
-          "    try {",
-          "        const errorData = pm.response.json();",
-          "        console.log('Error Response:', JSON.stringify(errorData, null, 2));",
-          "    } catch (e) {",
-          "        console.log('Error Response Body:', pm.response.text());",
-          "    }",
-          "}"
-        ]
-      }
+      "name": "Ticket Reservations (Not Implemented)",
+      "description": "APIs for managing ticket reservations - These endpoints are NOT yet available. The ITicketReservationController interface does not exist and needs to be implemented. The domain logic and data models exist but the REST controller is pending implementation.",
+      "item": [
+        {
+          "name": "Create Reservation (Controller Not Implemented)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Implementation Note', function () {",
+                  "    console.log('❌ This endpoint is NOT implemented yet');",
+                  "    console.log('Missing: ITicketReservationController interface and implementation');",
+                  "    console.log('Available: Domain models, entities, and business logic');",
+                  "    console.log('Expected endpoint: POST /api/ticket-system/reservations');",
+                  "    console.log('Current status: 404 - Endpoint not found');",
+                  "    pm.expect(pm.response.code).to.equal(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{eventId}}\",\n  \"ticketTypeId\": \"{{ticketTypeId}}\",\n  \"quantity\": 2,\n  \"durationMinutes\": 15\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/ticket-system/reservations",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ticket-system", "reservations"]
+            },
+            "description": "❌ NOT IMPLEMENTED: This endpoint will return 404. The ITicketReservationController interface needs to be created and implemented. The domain logic exists but the REST layer is missing."
+          },
+          "response": []
+        }
+      ]
     }
   ]
 } 

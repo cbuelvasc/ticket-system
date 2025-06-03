@@ -375,6 +375,89 @@ Key configuration sections:
 ./gradlew testWithContainers
 ```
 
+### Testing with Postman
+
+The Postman collection includes endpoints for all implemented functionalities:
+
+#### Implemented Endpoints ✅
+
+**Event Management**
+- `POST /events/organizers/{organizerId}` - Create event (with optional staffIds and ticketTypes)
+- `GET /events/organizers/{organizerId}` - List organizer events
+- `GET /events/{eventId}/organizers/{organizerId}` - Get specific organizer event
+- `PUT /events/{eventId}/organizers/{organizerId}` - Update event
+- `DELETE /events/{eventId}/organizers/{organizerId}` - Delete event
+- `GET /events` - List public events
+- `GET /events/search` - Search public events
+- `GET /events/{eventId}` - Get public event
+
+**Ticket Type Management**
+- `POST /ticket-types/events/{eventId}/organizers/{organizerId}` - Create ticket type
+- `GET /ticket-types/events/{eventId}/organizers/{organizerId}` - List organizer ticket types
+- `GET /ticket-types/{ticketTypeId}/events/{eventId}/organizers/{organizerId}` - Get specific ticket type
+- `PUT /ticket-types/{ticketTypeId}/events/{eventId}/organizers/{organizerId}` - Update ticket type
+- `DELETE /ticket-types/{ticketTypeId}/events/{eventId}/organizers/{organizerId}` - Delete ticket type
+- `GET /ticket-types/events/{eventId}/public` - List public ticket types
+- `GET /ticket-types/{ticketTypeId}/events/{eventId}/public` - Get specific public ticket type
+
+**Health & Monitoring**
+- `GET /admin/health` - Health check
+- `GET /admin/info` - Application information  
+- `GET /admin/metrics` - Application metrics
+
+**OpenAPI Documentation**
+- `GET /swagger-ui.html` - Swagger UI interface
+- `GET /v3/api-docs` - OpenAPI JSON specification
+
+#### Not Implemented Endpoints ❌
+
+**Ticket Reservations**
+- The `ITicketReservationController` interface does not exist yet
+- Domain models and business logic are implemented
+- REST controller needs to be created to expose endpoints
+- Expected endpoints: `/reservations/*`
+
+#### Collection Features
+
+**Environment Variables:**
+- `baseUrl`: http://localhost:9001
+- `organizerId`: Sample organizer UUID
+- `eventId`: Sample event UUID
+- `ticketTypeId`: Sample ticket type UUID
+
+**Pre-request Scripts:**
+- Automatic logging of request URLs
+- Validation of implemented vs non-implemented endpoints
+- Response time tracking
+
+**Automated Tests:**
+- HTTP status code validation
+- Automatic ID extraction for request chaining
+- JSON response structure validation
+- Enhanced error logging with validation details
+
+**Recommended Testing Flow:**
+1. **Health Check** - Verify application is running
+2. **Create Event** - Create an event with ticket types
+3. **List Events** - Verify event was created correctly
+4. **Update Event** - Change status to PUBLISHED
+5. **Get Public Event** - Verify public access
+6. **Get Public Ticket Types** - Verify ticket availability
+7. **Search Events** - Test full-text search
+
+#### Import Collection
+
+```bash
+# Collection file location:
+ticket-system/Ticket_System_Postman_Collection.json
+
+# Import into Postman:
+1. Open Postman
+2. File > Import
+3. Select the JSON file
+4. Configure environment variables if needed
+```
+
 ## 📈 Monitoring & Observability
 
 ### Health Checks
